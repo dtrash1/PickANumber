@@ -1,5 +1,6 @@
 package com.zunkdrombie.utils.pickanumber;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.*;
@@ -12,37 +13,35 @@ public class MainActivity extends Activity {
 	Random rgen;
 	int	maxRndAvail;
 	
+	
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         rgen = new Random();
-        final NumberPicker np1 = (NumberPicker) findViewById(R.id.numberPicker1);
-        // TODO: load maxRndAvail from app settings, then use below
         maxRndAvail = 5;
+      
+        final NumberPicker np1 = (NumberPicker) findViewById(R.id.numberPicker1);
         np1.setMaxValue(maxRndAvail);
         np1.setMinValue(1);
+       
         final TextView tv2 = (TextView) findViewById(R.id.textView2);
         tv2.setVisibility(View.INVISIBLE);
         final ProgressBar pb = (ProgressBar) findViewById(R.id.progressBar1);
         pb.setVisibility(View.VISIBLE);
         
-        final Button button_pick = (Button) findViewById(R.id.button2);
+       final Button button_pick = (Button) findViewById(R.id.button2);
         button_pick.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Perform action on click
-                final ProgressBar pb = (ProgressBar) findViewById(R.id.progressBar1);
-                pb.setVisibility(View.VISIBLE);           	
-            	final NumberPicker np1 = (NumberPicker) findViewById(R.id.numberPicker1);
-            	int maxval = np1.getValue();
-            	//TODO:  Add an AsyncTask to cause a 500ms pause
-            	int r = rgen.nextInt(maxval)+1;
-            	final TextView tv2 = (TextView) findViewById(R.id.textView2);
-            	tv2.setText(Integer.toString(r));
-            	tv2.setVisibility(View.VISIBLE);
-            	pb.setVisibility(View.INVISIBLE);  
+            	new PickRandomNumTask().execute();
+            	PickRandomNumTask prntask = new PickRandomNumTask();
+            	Void params = null;
+            	prntask.execute(params);
             }
         });
+
                 
     }
 
@@ -53,6 +52,7 @@ public class MainActivity extends Activity {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
+    
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -71,5 +71,39 @@ public class MainActivity extends Activity {
     	//TODO: change the global variable maxRndAvail and store in settings
     	//      for retrieval later
     }
+    
+    
+    public class PickRandomNumTask extends AsyncTask<Void, Integer, Integer> {
+    	@Override
+    	protected Integer doInBackground(Void... dummy) {
+        	NumberPicker np1 = (NumberPicker) findViewById(R.id.numberPicker1);
+        	int maxval = np1.getValue();
+        	//TODO:  Figure out why wait() causes a crash
+//        	try {
+//				wait(1);
+//			} catch (InterruptedException e) {
+//			}
+        	int r = rgen.nextInt(maxval)+1;
+        	return r;
+        }
+
+    	@Override
+        protected void onPreExecute() {
+        	findViewById(R.id.numberPicker1).setEnabled(false);
+        	findViewById(R.id.button2).setEnabled(false);
+        	findViewById(R.id.textView2).setVisibility(View.INVISIBLE); 
+            findViewById(R.id.progressBar1).setVisibility(View.VISIBLE);           	
+        }
+        
+    	@Override
+        protected void onPostExecute(Integer r) {
+        	findViewById(R.id.numberPicker1).setEnabled(true);
+        	findViewById(R.id.button2).setEnabled(true);
+        	findViewById(R.id.progressBar1).setVisibility(View.INVISIBLE);  
+        	final TextView tv2 = (TextView) findViewById(R.id.textView2);
+        	tv2.setText(Integer.toString(r));
+        	tv2.setVisibility(View.VISIBLE);
+        }
+    } 
 }
 
