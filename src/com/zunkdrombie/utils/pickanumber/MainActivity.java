@@ -4,7 +4,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.view.*;
 import android.widget.*;
 
@@ -14,6 +16,7 @@ public class MainActivity extends Activity {
 
 	Random rgen;
 	int	maxRndAvail;
+	public static final String PREFS_NAME = "PickANumberPrefs";
 	
 	
 	
@@ -22,7 +25,10 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         rgen = new Random();
-        maxRndAvail = 5;
+        
+        // Restore preferences
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        int maxRndAvail = settings.getInt("maxRndAvail", 5);
       
         final NumberPicker np1 = (NumberPicker) findViewById(R.id.numberPicker1);
         np1.setMaxValue(maxRndAvail);
@@ -46,7 +52,21 @@ public class MainActivity extends Activity {
 
                 
     }
+    
+    @Override
+    protected void onStop(){
+       super.onStop();
 
+      // We need an Editor object to make preference changes.
+      // All objects are from android.context.Context
+      SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+      SharedPreferences.Editor editor = settings.edit();
+      editor.putInt("maxRndAvail", maxRndAvail);
+
+      // Commit the edits!
+      editor.commit();
+    }
+    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -84,13 +104,15 @@ public class MainActivity extends Activity {
 		String value = input.getText().toString();
 		try {
 		   int myNum = Integer.parseInt(value);
-	    	//TODO: store the global variable maxRndAvail in settings
-	    	//      for retrieval later
 		   MainActivity.this.maxRndAvail = myNum;
 		   final NumberPicker np1 = (NumberPicker) findViewById(R.id.numberPicker1);
 	        np1.setMaxValue(myNum);
 		} catch(NumberFormatException nfe) {
 			//TODO: pop up a warning that you must enter an integer.
+			Context context = getApplicationContext();
+			CharSequence text = "Enter an Integer!";
+			int duration = Toast.LENGTH_SHORT;
+			Toast.makeText(context, text, duration).show();
 		}}
     	});
 
